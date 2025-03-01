@@ -33,10 +33,20 @@ Run the script from the command line:
 Options:
 - `--model MODEL`: Choose the Whisper model size (tiny, base, small, medium, large). Default: small
 - `--key KEY`: Change the hotkey (e.g., 'z', 'a', 's', or 'f13' for function keys). Default: z
+- `--test-mic`: Test microphone before starting
+- `--faster`: Use faster-whisper implementation (more efficient, requires extra package)
+- `--debug`: Enable additional debug output
 
-Example:
+Examples:
 ```bash
+# Use tiny model with 's' key for better speed
 ./whisper-hotkey --model tiny --key s
+
+# Test your microphone first
+./whisper-hotkey --test-mic
+
+# Use faster implementation for better performance
+./whisper-hotkey --faster --model small
 ```
 
 ### Keyboard Shortcut Setup

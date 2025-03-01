@@ -17,6 +17,11 @@ python3 -c "import pynput" 2>/dev/null || pip install --user pynput
 # When first run, whisper will need to be installed
 python3 -c "import whisper" 2>/dev/null || pip install --user openai-whisper
 
+# Check for faster-whisper (optional)
+if [[ "$*" == *"--faster"* ]]; then
+    python3 -c "from faster_whisper import WhisperModel" 2>/dev/null || pip install --user faster-whisper
+fi
+
 # Check for xclip and xdotool
 if ! command -v xclip &> /dev/null || ! command -v xdotool &> /dev/null; then
     echo "xclip and xdotool are required for clipboard operations."
