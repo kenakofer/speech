@@ -1,39 +1,46 @@
 #!/bin/bash
+#
+# Wrapper script for whisper-hotkey.py
+# Installs required dependencies and launches the speech recognition tool
 
 # Set the directory of this script
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Check for required packages
-if ! command -v python3 &> /dev/null; then
+# Function to check and install Python packages
+check_install_package() {
+    local package_name="$1"
+    local import_name="${2:-$1}"
+    
+    echo "Checking for $package_name..."
+    if ! python3 -c "import $import_name" &>/dev/null; then
+        echo "Installing $package_name..."
+        pip install --user "$package_name"
+    fi
+}
+
+# Check for required system packages
+if ! command -v python3 &>/dev/null; then
     echo "Python 3 is required but not installed. Please install it."
     exit 1
 fi
 
-# Check for required Python packages and install if missing
-python3 -c "import sounddevice" 2>/dev/null || pip install --user sounddevice
-python3 -c "import numpy" 2>/dev/null || pip install --user numpy
-python3 -c "import pynput" 2>/dev/null || pip install --user pynput
+# Check for system dependencies
+if ! command -v ffmpeg &>/dev/null || ! command -v xclip &>/dev/null || ! command -v xdotool &>/dev/null; then
+    echo "Required system packages not found. Please install them with:"
+    echo "sudo apt install -y ffmpeg xclip xdotool"
+    exit 1
+fi
 
-# When first run, whisper will need to be installed
-python3 -c "import whisper" 2>/dev/null || pip install --user openai-whisper
+# Check for and install required Python packages
+check_install_package "sounddevice"
+check_install_package "numpy"
+check_install_package "pynput"
+check_install_package "openai-whisper" "whisper"
+check_install_package "soundfile" "soundfile"
 
-# Check for faster-whisper (optional)
+# Check for faster-whisper if requested
 if [[ "$*" == *"--faster"* ]]; then
-    python3 -c "from faster_whisper import WhisperModel" 2>/dev/null || pip install --user faster-whisper
-fi
-
-# Check for xclip and xdotool
-if ! command -v xclip &> /dev/null || ! command -v xdotool &> /dev/null; then
-    echo "xclip and xdotool are required for clipboard operations."
-    echo "Please install them with: sudo apt install -y xclip xdotool"
-    exit 1
-fi
-
-# Check for ffmpeg
-if ! command -v ffmpeg &> /dev/null; then
-    echo "ffmpeg is required for audio processing."
-    echo "Please install it with: sudo apt install -y ffmpeg"
-    exit 1
+    check_install_package "faster-whisper" "faster_whisper"
 fi
 
 # Launch the whisper hotkey script
