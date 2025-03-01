@@ -11,6 +11,7 @@ A hold-to-speak speech recognition tool using OpenAI's Whisper. Press and hold a
 - Automatic WAV file creation in multiple formats
 - Debug mode for troubleshooting
 - Microphone testing capability
+- Multiple paste methods for compatibility with different applications
 
 ## Installation
 
@@ -20,7 +21,12 @@ A hold-to-speak speech recognition tool using OpenAI's Whisper. Press and hold a
 sudo apt install -y python3-pip ffmpeg xclip xdotool
 ```
 
-2. Clone or download this repository to a location of your choice
+2. Clone or download this repository:
+
+```bash
+git clone https://github.com/yourusername/whisper-hotkey.git
+cd whisper-hotkey
+```
 
 3. Make the scripts executable:
 
@@ -42,6 +48,7 @@ The wrapper script automatically checks for and installs required Python depende
 
 ```
 usage: whisper-hotkey.py [-h] [--model MODEL] [--sample_rate SAMPLE_RATE] [--key KEY] [--test-mic] [--faster] [--debug]
+                        [--paste-method {both,middle,ctrl+v,type}]
 
 Hold-to-record speech recognition with Whisper
 
@@ -136,6 +143,20 @@ If transcribed text doesn't get inserted into your application:
    xdotool key ctrl+v
    ```
 
+## Development
+
+### Running Tests
+
+To run the test suite:
+
+```bash
+./run_tests.sh
+```
+
+This will run all unit tests with coverage reporting. For more details, see the [tests README](tests/README.md).
+
+The tests use a special import module (`whisper_module.py`) that exposes the classes and functions from `whisper-hotkey.py` without executing the script. This allows for proper unit testing of the individual components.
+
 ## Notes
 
 - The script requires an active internet connection for the initial model download
@@ -143,3 +164,12 @@ If transcribed text doesn't get inserted into your application:
 - The "small" model offers a good balance between accuracy and speed/resource usage
 - For more accuracy, use the "medium" or "large" models (but they require more RAM)
 - For faster response, use the "tiny" model (less accurate but very fast)
+
+## License
+
+MIT License
+
+## Acknowledgments
+
+- [OpenAI Whisper](https://github.com/openai/whisper) for the amazing speech recognition models
+- [faster-whisper](https://github.com/guillaumekln/faster-whisper) for the optimized implementation
