@@ -3,20 +3,19 @@
 Whisper Hold-to-Speak: A speech-to-text tool using OpenAI's Whisper.
 Press and hold a key to record, release to insert the transcribed text.
 """
-import sounddevice as sd
-import numpy as np
-import subprocess
-import tempfile
-import os
-import sys
-import threading
-import time
 import argparse
 import logging
-from pynput import keyboard
-from pathlib import Path
-from typing import Optional, List, Tuple, Dict, Any, Union, Callable
+import os
+import subprocess
+import sys
+import tempfile
+import threading
+import time
+from typing import List, Optional
 
+import numpy as np
+import sounddevice as sd
+from pynput import keyboard
 
 # Configure logging
 logging.basicConfig(
@@ -167,7 +166,7 @@ class AudioProcessor:
             try:
                 # Fallback to scipy
                 from scipy.io import wavfile
-                
+
                 # Ensure audio_data is in the right format (normalized to int16)
                 normalized_audio = np.int16(audio_data * 32767)
                 wavfile.write(debug_wav, sample_rate, normalized_audio)
@@ -246,6 +245,10 @@ class AudioProcessor:
 class NotificationManager:
     """Handles system notifications and feedback."""
     
+    def __init__(self, paste_method: str = 'both'):
+        """Initialize with the preferred paste method."""
+        self.paste_method = paste_method
+    
     def notify(self, title: str, message: str) -> None:
         """Send a desktop notification and log the message."""
         subprocess.run(['notify-send', title, message])
@@ -254,12 +257,39 @@ class NotificationManager:
     def insert_text(self, text: str) -> bool:
         """Insert text at cursor position via clipboard and keyboard shortcut."""
         try:
-            # Copy to clipboard first
+            # Always copy to both selections for flexibility
+            logger.debug("Copying text to clipboard")
+            
+            # Copy to primary selection (middle-click paste)
+            process = subprocess.Popen(['xclip', '-selection', 'primary'], stdin=subprocess.PIPE)
+            process.communicate(input=text.encode())
+            
+            # Also copy to clipboard selection (Ctrl+V paste)
             process = subprocess.Popen(['xclip', '-selection', 'clipboard'], stdin=subprocess.PIPE)
             process.communicate(input=text.encode())
             
-            # Then simulate Ctrl+V to paste
-            subprocess.run(['xdotool', 'key', 'ctrl+v'])
+            # Give the clipboard a moment to update
+            time.sleep(0.2)
+            
+            # Use the appropriate paste method
+            if self.paste_method in ['both', 'middle']:
+                # Try middle mouse button paste (works in most Linux apps)
+                logger.debug("Simulating middle mouse button click")
+                subprocess.run(['xdotool', 'click', '2'])
+                time.sleep(0.2)  # Give it a moment to process
+            
+            if self.paste_method in ['both', 'ctrl+v']:
+                # Try Ctrl+V (works in most graphical apps)
+                logger.debug("Simulating Ctrl+V keystroke")
+                subprocess.run(['xdotool', 'key', 'ctrl+v'])
+                time.sleep(0.1)  # Give it a moment to process
+            
+            if self.paste_method == 'type':
+                # Type the text directly (most reliable but slowest)
+                logger.debug("Simulating keyboard typing")
+                # Use xdotool to type the text character by character
+                subprocess.run(['xdotool', 'type', text])
+            
             return True
         except Exception as e:
             logger.error(f"Failed to insert text: {e}")
@@ -380,7 +410,7 @@ class WhisperHotkey:
         # Initialize components
         self.recorder = AudioRecorder(sample_rate=args.sample_rate)
         self.processor = AudioProcessor()
-        self.notifier = NotificationManager()
+        self.notifier = NotificationManager(paste_method=args.paste_method)
         self.transcriber = TranscriptionEngine(
             model_name=args.model,
             use_faster_whisper=args.faster
@@ -517,6 +547,8 @@ def parse_arguments() -> argparse.Namespace:
                         help='Use faster-whisper implementation')
     parser.add_argument('--debug', action='store_true', 
                         help='Enable additional debug output')
+    parser.add_argument('--paste-method', default='type', choices=['both', 'middle', 'ctrl+v', 'type'],
+                        help='Method to use for pasting text: both, middle (mouse click), ctrl+v, or type (simulates keyboard)')
     return parser.parse_args()
 
 

@@ -54,6 +54,9 @@ options:
   --test-mic            Test microphone before starting
   --faster              Use faster-whisper implementation
   --debug               Enable additional debug output
+  --paste-method {both,middle,ctrl+v,type}
+                        Method to use for pasting text: both, middle (mouse click), 
+                        ctrl+v, or type (simulates keyboard)
 ```
 
 ### Examples
@@ -70,6 +73,9 @@ options:
 
 # Enable debug mode for troubleshooting
 ./whisper-hotkey --debug
+
+# Use direct keyboard typing for pasting (better compatibility with some apps)
+./whisper-hotkey --paste-method type
 ```
 
 ### Keyboard Shortcut Setup
@@ -110,6 +116,25 @@ If you encounter issues:
 3. Examine the saved audio file at `~/speech/last_recording.wav`
 4. Try different model sizes, starting with `tiny` for faster results
 5. Consider using `--faster` for improved performance
+
+### Text Insertion Issues
+
+If transcribed text doesn't get inserted into your application:
+
+1. Try a different paste method:
+   - `--paste-method middle` for terminal and X11 apps
+   - `--paste-method ctrl+v` for most GUI applications
+   - `--paste-method type` for direct keyboard typing (slowest but most compatible)
+
+2. Make sure you have proper permissions:
+   - Some applications may block programmatic pasting for security reasons
+   - You might need to run with elevated permissions for system applications
+
+3. Verify xdotool and xclip are working:
+   ```bash
+   echo "test" | xclip -selection clipboard
+   xdotool key ctrl+v
+   ```
 
 ## Notes
 
