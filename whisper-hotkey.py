@@ -417,7 +417,9 @@ class WhisperHotkey:
         )
         
         # Set trigger key
-        if len(args.key) == 1:
+        if args.key.upper() == "F13":
+            self.trigger_key = keyboard.KeyCode(vk=269025153)
+        elif len(args.key) == 1:
             self.trigger_key = keyboard.KeyCode.from_char(args.key)
         else:
             try:
@@ -539,8 +541,8 @@ def parse_arguments() -> argparse.Namespace:
                         help='Model size to use (tiny, base, small, medium, large)')
     parser.add_argument('--sample_rate', type=int, default=16000, 
                         help='Sample rate for recording')
-    parser.add_argument('--key', default='z', 
-                        help='Key to hold for recording (single character, e.g., z, a, s)')
+    parser.add_argument('--key', default='F13',
+                        help='Key to hold for recording (single character or function key name, e.g., z, a, scroll_lock)')
     parser.add_argument('--test-mic', action='store_true', 
                         help='Test microphone before starting')
     parser.add_argument('--faster', action='store_true', 
