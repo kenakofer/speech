@@ -1,0 +1,35 @@
+#!/bin/bash
+
+# Set the directory of this script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Check for required packages
+if ! command -v python3 &> /dev/null; then
+    echo "Python 3 is required but not installed. Please install it."
+    exit 1
+fi
+
+# Check for required Python packages and install if missing
+python3 -c "import sounddevice" 2>/dev/null || pip install --user sounddevice
+python3 -c "import numpy" 2>/dev/null || pip install --user numpy
+python3 -c "import pynput" 2>/dev/null || pip install --user pynput
+
+# When first run, whisper will need to be installed
+python3 -c "import whisper" 2>/dev/null || pip install --user openai-whisper
+
+# Check for xclip and xdotool
+if ! command -v xclip &> /dev/null || ! command -v xdotool &> /dev/null; then
+    echo "xclip and xdotool are required for clipboard operations."
+    echo "Please install them with: sudo apt install -y xclip xdotool"
+    exit 1
+fi
+
+# Check for ffmpeg
+if ! command -v ffmpeg &> /dev/null; then
+    echo "ffmpeg is required for audio processing."
+    echo "Please install it with: sudo apt install -y ffmpeg"
+    exit 1
+fi
+
+# Launch the whisper hotkey script
+python3 "$SCRIPT_DIR/whisper-hotkey.py" "$@"
